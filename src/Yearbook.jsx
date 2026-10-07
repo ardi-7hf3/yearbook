@@ -78,7 +78,13 @@ export default function Yearbook({ pages }) {
   const wrap = useRef()
   const [cur, setCur] = useState(0)
   const flip = (d) => {
+    wrap.current.dataset.dir = d > 0 ? 'next' : 'prev'
     book.current?.pageFlip()[d > 0 ? 'flipNext' : 'flipPrev']()
+  }
+  // arah saat klik/tarik langsung ke buku: sisi kanan = maju, sisi kiri = mundur
+  const onDown = (e) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    wrap.current.dataset.dir = e.clientX > r.left + r.width / 2 ? 'next' : 'prev'
   }
   // belakang kertas dibuat putih polos hanya selama animasi (lihat index.css)
   const onState = (e) => { wrap.current.dataset.flip = e.data === 'flipping' || e.data === 'user_fold' ? 'on' : 'off' }
@@ -91,7 +97,7 @@ export default function Yearbook({ pages }) {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div ref={wrap} className="w-full max-w-[920px] px-4">
+      <div ref={wrap} onPointerDownCapture={onDown} className="w-full max-w-[920px] px-4">
         <HTMLFlipBook
           ref={book} width={420} height={560} size="stretch"
           minWidth={260} maxWidth={460} minHeight={360} maxHeight={640}
