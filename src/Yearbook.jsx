@@ -86,8 +86,11 @@ export default function Yearbook({ pages }) {
     const r = e.currentTarget.getBoundingClientRect()
     wrap.current.dataset.dir = e.clientX > r.left + r.width / 2 ? 'next' : 'prev'
   }
-  // belakang kertas dibuat putih polos hanya selama animasi (lihat index.css)
-  const onState = (e) => { wrap.current.dataset.flip = e.data === 'flipping' || e.data === 'user_fold' ? 'on' : 'off' }
+  // belakang kertas putih polos hanya di layar portrait (HP vertikal), maju saja (lihat index.css)
+  const onState = (e) => {
+    wrap.current.dataset.mode = book.current?.pageFlip().getOrientation() // portrait | landscape
+    wrap.current.dataset.flip = e.data === 'flipping' || e.data === 'user_fold' ? 'on' : 'off'
+  }
 
   useEffect(() => {
     const k = (e) => { if (e.key === 'ArrowRight') flip(1); if (e.key === 'ArrowLeft') flip(-1) }
