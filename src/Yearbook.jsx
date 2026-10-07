@@ -10,15 +10,28 @@ const Circle = ({ className }) => <div className={`absolute rounded-full ${class
 const Page = forwardRef(({ p, n }, ref) => {
   const base = 'relative h-full w-full overflow-hidden bg-white'
   let body
-  if (p.kind === 'cover') {
+  if (p.kind === 'canva' || (p.kind === 'cover' && p.image_url && !p.title && !p.body)) {
+    // halaman/cover dari gambar jadi (mis. dibuat di Canva): penuh satu kertas
+    body = <div className={base}><img src={p.image_url} alt={p.title || ''} className="h-full w-full object-cover" draggable={false} /></div>
+  } else if (p.kind === 'cover') {
+    const hasImg = !!p.image_url
     body = (
       <div className={`${base} bg-card flex flex-col justify-end p-8`}>
         {/* SLOT: dekorasi cover */}
-        <Circle className="-right-16 -top-16 h-64 w-64 bg-brand" />
-        <Circle className="left-8 top-24 h-20 w-20 bg-black" />
+        {hasImg ? (
+          <>
+            <img src={p.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          </>
+        ) : (
+          <>
+            <Circle className="-right-16 -top-16 h-64 w-64 bg-brand" />
+            <Circle className="left-8 top-24 h-20 w-20 bg-black" />
+          </>
+        )}
         <div className="absolute left-8 top-8 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black">Yearbook</div>
-        <h1 className="display text-4xl sm:text-5xl">{p.title}</h1>
-        <p className="mt-3 text-base font-semibold text-mute">{p.body}</p>
+        <h1 className={`display relative text-4xl sm:text-5xl ${hasImg ? '!text-white' : ''}`}>{p.title}</h1>
+        <p className={`relative mt-3 text-base font-semibold ${hasImg ? 'text-white/85' : 'text-mute'}`}>{p.body}</p>
       </div>
     )
   } else if (p.kind === 'students') {
