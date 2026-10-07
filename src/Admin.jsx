@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, loadPages } from './supabase.js'
 
-const KINDS = { cover: 'Cover', text: 'Teks', photo: 'Foto', quote: 'Kutipan' }
+const KINDS = { cover: 'Cover', text: 'Teks', student: 'Siswa', photo: 'Foto', quote: 'Kutipan' }
 const newPage = () => ({ id: crypto.randomUUID(), kind: 'text', title: '', body: '', image_url: '' })
 
 export default function Admin() {
@@ -72,9 +72,9 @@ export default function Admin() {
           <select className="field" value={p.kind} onChange={(e) => set(i, { kind: e.target.value })} aria-label="Jenis halaman">
             {Object.entries(KINDS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <input className="field" placeholder="Judul" value={p.title || ''} onChange={(e) => set(i, { title: e.target.value })} />
-          <textarea className="field" rows={3} placeholder="Teks" value={p.body || ''} onChange={(e) => set(i, { body: e.target.value })} />
-          {p.kind === 'photo' && (
+          <input className="field" placeholder={p.kind === 'student' ? 'Nama siswa' : 'Judul'} value={p.title || ''} onChange={(e) => set(i, { title: e.target.value })} />
+          <textarea className="field" rows={3} placeholder={p.kind === 'student' ? 'Kata-kata siswa' : 'Teks'} value={p.body || ''} onChange={(e) => set(i, { body: e.target.value })} />
+          {(p.kind === 'photo' || p.kind === 'student') && (
             <div className="flex flex-wrap items-center gap-3">
               {p.image_url && <img src={p.image_url} alt="" className="h-20 w-16 rounded-2xl object-cover" />}
               <input className="field flex-1" placeholder="URL gambar" value={p.image_url || ''} onChange={(e) => set(i, { image_url: e.target.value })} />

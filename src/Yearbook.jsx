@@ -18,6 +18,20 @@ const Page = forwardRef(({ p, n }, ref) => {
         <p className="mt-3 text-base font-semibold text-mute">{p.body}</p>
       </div>
     )
+  } else if (p.kind === 'student') {
+    body = (
+      <div className={`${base} flex flex-col bg-soft p-5`}>
+        {/* SLOT: dekorasi halaman siswa */}
+        <div className="relative min-h-0 flex-[3] overflow-hidden rounded-[24px] bg-card">
+          {p.image_url && <img src={p.image_url} alt={p.title} className="h-full w-full object-cover" loading="lazy" draggable={false} />}
+          <div className="absolute left-1/2 top-2 h-5 w-20 -translate-x-1/2 rotate-2 rounded-lg bg-white/70" />
+        </div>
+        <div className="flex flex-[2] flex-col justify-center pt-4">
+          <h2 className="heading text-2xl">{p.title}</h2>
+          <p className="mt-2 text-[15px] leading-[1.45] text-body">“{p.body}”</p>
+        </div>
+      </div>
+    )
   } else if (p.kind === 'photo') {
     body = (
       <div className={base}>
