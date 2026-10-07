@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import HTMLFlipBook from 'react-pageflip'
 
 /* Elemen polos buatan Claude. Cari komentar "SLOT" untuk menaruh elemen Anda sendiri. */
@@ -21,20 +21,23 @@ const Page = forwardRef(({ p, n }, ref) => {
         <p className="mt-3 text-base font-semibold text-mute">{p.body}</p>
       </div>
     )
-  } else if (p.kind === 'student') {
+  } else if (p.kind === 'students') {
+    // satu kertas = 2 siswa (foto polaroid + nama + kata-kata)
     body = (
-      <div className={`${base} flex items-center justify-center bg-card p-5`}>
+      <div className={`${base} flex flex-col justify-center gap-[3%] bg-card px-[9%] py-5 [container-type:inline-size]`}>
         {/* SLOT: dekorasi halaman siswa */}
-        <figure className={`relative m-0 w-full max-w-[340px] bg-white p-3 pb-5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ${n % 2 ? '-rotate-1' : 'rotate-1'}`}>
-          <Pita className="-top-6 z-10 w-16" />
-          <div className="aspect-square w-full overflow-hidden bg-soft">
-            {p.image_url && <img src={p.image_url} alt={p.title} className="h-full w-full object-cover" loading="lazy" draggable={false} />}
-          </div>
-          <figcaption className="px-1 pt-4">
-            <h2 className="heading text-xl">{p.title}</h2>
-            <p className="mt-1.5 line-clamp-4 text-sm leading-[1.45] text-body">“{p.body}”</p>
-          </figcaption>
-        </figure>
+        {p.items.map((s, k) => (
+          <figure key={s.id} className={`relative m-0 flex max-h-[48%] min-h-0 w-[80%] flex-1 flex-col bg-white p-[2.4cqw] pb-[3cqw] shadow-[0_6px_20px_rgba(0,0,0,0.12)] ${k ? 'self-end rotate-1' : 'self-start -rotate-1'}`}>
+            <Pita className="-top-4 z-10 w-10" />
+            <div className="min-h-0 flex-1 overflow-hidden bg-soft">
+              {s.image_url && <img src={s.image_url} alt={s.title} className="h-full w-full object-cover" loading="lazy" draggable={false} />}
+            </div>
+            <figcaption className="shrink-0 px-[1cqw] pt-[2.6cqw]">
+              <h2 className="heading text-[clamp(14px,4.4cqw,20px)] leading-tight">{s.title}</h2>
+              <p className="mt-1 line-clamp-2 text-[clamp(11px,3.2cqw,14px)] leading-snug text-body">“{s.body}”</p>
+            </figcaption>
+          </figure>
+        ))}
       </div>
     )
   } else if (p.kind === 'photo') {
@@ -73,7 +76,21 @@ const Page = forwardRef(({ p, n }, ref) => {
   )
 })
 
-export default function Yearbook({ pages }) {
+// Siswa berurutan digabung 2 per kertas; halaman lain (cover, teks, foto, kutipan) tetap 1 per kertas.
+function group(rows) {
+  const out = []
+  let buf = []
+  const flush = () => { if (buf.length) { out.push({ id: buf.map((b) => b.id).join('+'), kind: 'students', items: buf }); buf = [] } }
+  for (const r of rows) {
+    if (r.kind === 'student') { buf.push(r); if (buf.length === 2) flush() }
+    else { flush(); out.push(r) }
+  }
+  flush()
+  return out
+}
+
+export default function Yearbook({ pages: rows }) {
+  const pages = useMemo(() => group(rows), [rows])
   const book = useRef()
   const wrap = useRef()
   const [cur, setCur] = useState(0)
