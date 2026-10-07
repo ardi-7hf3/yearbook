@@ -2,6 +2,9 @@ import { forwardRef, useEffect, useRef, useState } from 'react'
 import HTMLFlipBook from 'react-pageflip'
 
 /* Elemen polos buatan Claude. Cari komentar "SLOT" untuk menaruh elemen Anda sendiri. */
+const Pita = ({ className }) => (
+  <img src={`${import.meta.env.BASE_URL}pita.png`} alt="" draggable={false} className={`pointer-events-none absolute left-1/2 -translate-x-1/2 ${className}`} />
+)
 const Circle = ({ className }) => <div className={`absolute rounded-full ${className}`} />
 
 const Page = forwardRef(({ p, n }, ref) => {
@@ -20,24 +23,26 @@ const Page = forwardRef(({ p, n }, ref) => {
     )
   } else if (p.kind === 'student') {
     body = (
-      <div className={`${base} flex flex-col bg-soft p-5`}>
+      <div className={`${base} flex items-center justify-center bg-card p-5`}>
         {/* SLOT: dekorasi halaman siswa */}
-        <div className="relative min-h-0 flex-[3] overflow-hidden rounded-[24px] bg-card">
-          {p.image_url && <img src={p.image_url} alt={p.title} className="h-full w-full object-cover" loading="lazy" draggable={false} />}
-          <div className="absolute left-1/2 top-2 h-5 w-20 -translate-x-1/2 rotate-2 rounded-lg bg-white/70" />
-        </div>
-        <div className="flex flex-[2] flex-col justify-center pt-4">
-          <h2 className="heading text-2xl">{p.title}</h2>
-          <p className="mt-2 text-[15px] leading-[1.45] text-body">“{p.body}”</p>
-        </div>
+        <figure className={`relative m-0 w-full max-w-[340px] bg-white p-3 pb-5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] ${n % 2 ? '-rotate-1' : 'rotate-1'}`}>
+          <Pita className="-top-6 z-10 w-16" />
+          <div className="aspect-square w-full overflow-hidden bg-soft">
+            {p.image_url && <img src={p.image_url} alt={p.title} className="h-full w-full object-cover" loading="lazy" draggable={false} />}
+          </div>
+          <figcaption className="px-1 pt-4">
+            <h2 className="heading text-xl">{p.title}</h2>
+            <p className="mt-1.5 line-clamp-4 text-sm leading-[1.45] text-body">“{p.body}”</p>
+          </figcaption>
+        </figure>
       </div>
     )
   } else if (p.kind === 'photo') {
     body = (
       <div className={base}>
         <img src={p.image_url} alt={p.title} className="h-full w-full object-cover" loading="lazy" draggable={false} />
-        {/* SLOT: tape di atas foto */}
-        <div className="absolute left-1/2 top-3 h-6 w-24 -translate-x-1/2 -rotate-3 rounded-lg bg-white/70" />
+        {/* SLOT: pita di atas foto */}
+        <Pita className="top-3 w-14" />
         {p.title && <span className="absolute bottom-5 left-5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black">{p.title}</span>}
       </div>
     )
