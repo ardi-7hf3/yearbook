@@ -8,7 +8,7 @@ const Pita = ({ className }) => (
 const COVERISH = ['cover', 'inner-front', 'inner-back']
 const Circle = ({ className }) => <div className={`absolute rounded-full ${className}`} />
 
-const Page = forwardRef(({ p, n }, ref) => {
+export const Page = forwardRef(({ p, n }, ref) => {
   const base = 'relative h-full w-full overflow-hidden bg-white'
   let body
   if (p.kind === 'canva' || (COVERISH.includes(p.kind) && p.image_url && !p.title && !p.body)) {
