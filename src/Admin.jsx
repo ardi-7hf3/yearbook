@@ -11,13 +11,16 @@ function toState(rows) {
   const inner = (k) => (rows.find((r) => r.kind === k) ? reid(rows.find((r) => r.kind === k)) : blank(k))
   const mid = rows.filter((r) => !['cover', 'inner-front', 'inner-back'].includes(r.kind)).map(reid)
   const papers = []
+  let pendingBg = '' // baris 'paper-bg' = background untuk kertas siswa berikutnya
   for (let i = 0; i < mid.length; i++) {
     const r = mid[i]
+    if (r.kind === 'paper-bg') { pendingBg = r.image_url || ''; continue }
     if (r.kind === 'student') {
       const nx = mid[i + 1]
-      if (nx && nx.kind === 'student') { papers.push({ id: r.id, type: 'students', rows: [r, nx] }); i++ }
-      else papers.push({ id: r.id, type: 'students', rows: [r] })
-    } else papers.push({ id: r.id, type: r.kind === 'canva' ? 'canva' : 'old', rows: [r] })
+      const bgv = pendingBg; pendingBg = ''
+      if (nx && nx.kind === 'student') { papers.push({ id: r.id, type: 'students', bg: bgv, rows: [r, nx] }); i++ }
+      else papers.push({ id: r.id, type: 'students', bg: bgv, rows: [r] })
+    } else { pendingBg = ''; papers.push({ id: r.id, type: r.kind === 'canva' ? 'canva' : 'old', rows: [r] }) }
   }
   covers.slice(1, -1).forEach((r) => papers.push({ id: r.id, type: 'old', rows: [r] }))
   return {
@@ -78,14 +81,15 @@ export default function Admin() {
   }
   const editRow = (pi, ri, patch) =>
     setPapers(papers.map((p, i) => (i === pi ? { ...p, rows: p.rows.map((r, j) => (j === ri ? { ...r, ...patch } : r)) } : p)))
-  const addStudents = () => { const a = blank('student'), b = blank('student'); setPapers([...papers, { id: a.id, type: 'students', rows: [a, b] }]); setSel(a.id) }
+  const editPaper = (pi, patch) => setPapers(papers.map((p, i) => (i === pi ? { ...p, ...patch } : p)))
+  const addStudents = () => { const a = blank('student'), b = blank('student'); setPapers([...papers, { id: a.id, type: 'students', bg: '', rows: [a, b] }]); setSel(a.id) }
   const addCanva = () => { const r = blank('canva'); setPapers([...papers, { id: r.id, type: 'canva', rows: [r] }]); setSel(r.id) }
 
   const save = async () => {
     setMsg('Menyimpan…')
     const rows = [
       { ...front, kind: 'cover' }, { ...innerF, kind: 'inner-front' },
-      ...papers.flatMap((p) => p.rows),
+      ...papers.flatMap((p) => (p.type === 'students' && p.bg ? [{ id: crypto.randomUUID(), kind: 'paper-bg', title: '', body: '', image_url: p.bg }, ...p.rows] : p.rows)),
       { ...innerB, kind: 'inner-back' }, { ...back, kind: 'cover' },
     ].map((r, i) => ({ ...r, sort: i }))
     rows.push({ id: SETTINGS_ID, sort: -1, kind: 'settings', title: '', body: '', image_url: bg })
@@ -102,7 +106,7 @@ export default function Admin() {
     { key: 'innerF', label: 'Dalam cover depan', page: { ...innerF, kind: 'inner-front' } },
     ...papers.map((p, i) => ({
       key: p.id, label: `Kertas ${i + 1}`,
-      page: p.type === 'students' ? { id: p.id, kind: 'students', items: p.rows } : p.rows[0],
+      page: p.type === 'students' ? { id: p.id, kind: 'students', items: p.rows, bg: p.bg } : p.rows[0],
     })),
     { key: 'innerB', label: 'Dalam cover belakang', page: { ...innerB, kind: 'inner-back' } },
     { key: 'back', label: 'Cover belakang', page: { ...back, kind: 'cover' } },
@@ -163,7 +167,7 @@ export default function Admin() {
             </Card>
           )}
           {cm && <CoverEditor key={sel} c={cm[0]} onChange={(p) => cm[1]({ ...cm[0], ...p })} onFile={imgHandler} />}
-          {paper && <PaperEditor p={paper} pi={pi} editRow={editRow} imgHandler={imgHandler} />}
+          {paper && <PaperEditor p={paper} pi={pi} editRow={editRow} editPaper={editPaper} imgHandler={imgHandler} />}
           {msg && <p className="text-sm font-semibold text-mute" role="status">{msg}</p>}
         </aside>
       )}
@@ -171,15 +175,21 @@ export default function Admin() {
   )
 }
 
-function PaperEditor({ p, pi, editRow, imgHandler }) {
+function PaperEditor({ p, pi, editRow, editPaper, imgHandler }) {
   if (p.type === 'students') {
-    return p.rows.map((r, ri) => (
+    return [
+      <Card key="bg" title="Background kertas">
+        <p className="text-sm text-mute">Gambar di belakang kedua foto siswa (opsional). Isi URL, atau unggah dari perangkat.</p>
+        <ImageField url={p.bg} onUrl={(u) => editPaper(pi, { bg: u })} onFile={imgHandler((u) => editPaper(pi, { bg: u }))} />
+      </Card>,
+      ...p.rows.map((r, ri) => (
       <Card key={r.id} title={`Siswa ${ri + 1}`}>
         <input className="field" placeholder="Nama siswa" value={r.title || ''} onChange={(e) => editRow(pi, ri, { title: e.target.value })} />
         <textarea className="field" rows={2} placeholder="Kata-kata siswa" value={r.body || ''} onChange={(e) => editRow(pi, ri, { body: e.target.value })} />
         <ImageField url={r.image_url} onUrl={(u) => editRow(pi, ri, { image_url: u })} onFile={imgHandler((u) => editRow(pi, ri, { image_url: u }))} />
       </Card>
-    ))
+      )),
+    ]
   }
   if (p.type === 'canva') {
     return (

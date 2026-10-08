@@ -58,6 +58,7 @@ export const Page = forwardRef(({ p, n }, ref) => {
     body = (
       <div className={`${base} flex flex-col justify-center gap-[3%] bg-card px-[9%] py-5 [container-type:inline-size]`}>
         {/* SLOT: dekorasi halaman siswa */}
+        {p.bg && <img src={p.bg} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />}
         {p.items.map((s, k) => (
           <figure key={s.id} className={`relative m-0 flex max-h-[48%] min-h-0 w-[80%] flex-1 flex-col bg-white p-[2.4cqw] pb-[3cqw] shadow-[0_6px_20px_rgba(0,0,0,0.12)] ${k ? 'self-end rotate-1' : 'self-start -rotate-1'}`}>
             <Pita className="-top-4 z-10 w-10" />
@@ -120,11 +121,12 @@ function group(rows, portrait) {
   if (portrait) list = list.filter((r) => r.kind !== 'inner-front' && r.kind !== 'inner-back')
 
   const out = []
-  let buf = []
-  const flush = () => { if (buf.length) { out.push({ id: buf.map((b) => b.id).join('+'), kind: 'students', items: buf }); buf = [] } }
+  let buf = [], bufBg = '', curBg = ''
+  const flush = () => { if (buf.length) { out.push({ id: buf.map((b) => b.id).join('+'), kind: 'students', items: buf, bg: bufBg }); buf = []; bufBg = '' } }
   for (const r of list) {
-    if (r.kind === 'student') { buf.push(r); if (buf.length === 2) flush() }
-    else { flush(); out.push(r) }
+    if (r.kind === 'paper-bg') { flush(); curBg = r.image_url || ''; continue } // background untuk kertas siswa berikutnya
+    if (r.kind === 'student') { if (!buf.length) { bufBg = curBg; curBg = '' } buf.push(r); if (buf.length === 2) flush() }
+    else { flush(); curBg = ''; out.push(r) }
   }
   flush()
   // jumlah halaman harus genap agar cover belakang tampil sendirian di akhir (landscape)
