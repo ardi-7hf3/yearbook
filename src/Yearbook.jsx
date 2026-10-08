@@ -41,13 +41,11 @@ const Page = forwardRef(({ p, n }, ref) => {
     body = (
       <div className={`${base} flex flex-col items-center justify-center bg-soft p-8 text-center`}>
         {/* SLOT: dekorasi dalam cover */}
-        {hasImg ? (
+        {hasImg && (
           <>
             <img src={p.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
             <div className="absolute inset-0 bg-black/40" />
           </>
-        ) : (
-          <Circle className="-bottom-10 -left-10 h-40 w-40 bg-card" />
         )}
         <h2 className={`heading relative text-3xl ${hasImg ? '!text-white' : ''}`}>{p.title}</h2>
         <p className={`relative mt-3 max-w-[30ch] text-base ${hasImg ? 'text-white/90' : 'text-body'}`}>{p.body}</p>
