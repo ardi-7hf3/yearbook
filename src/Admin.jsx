@@ -7,7 +7,8 @@ const reid = (r) => (String(r.id).startsWith('d') ? { ...r, id: crypto.randomUUI
 // Baris database -> cover depan, cover belakang, dan daftar kertas (siswa berpasangan, Canva, atau halaman lama)
 function toState(rows) {
   const covers = rows.filter((r) => r.kind === 'cover').map(reid)
-  const mid = rows.filter((r) => r.kind !== 'cover').map(reid)
+  const inner = (k) => rows.find((r) => r.kind === k) ? reid(rows.find((r) => r.kind === k)) : blank(k)
+  const mid = rows.filter((r) => !['cover', 'inner-front', 'inner-back'].includes(r.kind)).map(reid)
   const papers = []
   for (let i = 0; i < mid.length; i++) {
     const r = mid[i]
@@ -20,6 +21,8 @@ function toState(rows) {
   covers.slice(1, -1).forEach((r) => papers.push({ id: r.id, type: 'old', rows: [r] }))
   return {
     front: covers[0] || blank('cover'),
+    innerF: inner('inner-front'),
+    innerB: inner('inner-back'),
     back: covers.length > 1 ? covers[covers.length - 1] : blank('cover'),
     papers,
   }
@@ -30,6 +33,8 @@ export default function Admin() {
   const [ready, setReady] = useState(false)
   const [front, setFront] = useState(null)
   const [back, setBack] = useState(null)
+  const [innerF, setInnerF] = useState(null)
+  const [innerB, setInnerB] = useState(null)
   const [papers, setPapers] = useState([])
   const [bg, setBg] = useState('')
   const [msg, setMsg] = useState('')
@@ -44,7 +49,7 @@ export default function Admin() {
     if (!session) return
     loadBook().then(({ pages, bg: b }) => {
       const s = toState(pages)
-      setFront(s.front); setBack(s.back); setPapers(s.papers); setBg(b)
+      setFront(s.front); setBack(s.back); setInnerF(s.innerF); setInnerB(s.innerB); setPapers(s.papers); setBg(b)
     })
   }, [session])
 
@@ -76,7 +81,7 @@ export default function Admin() {
 
   const save = async () => {
     setMsg('Menyimpan…')
-    const rows = [{ ...front, kind: 'cover' }, ...papers.flatMap((p) => p.rows), { ...back, kind: 'cover' }].map((r, i) => ({ ...r, sort: i }))
+    const rows = [{ ...front, kind: 'cover' }, { ...innerF, kind: 'inner-front' }, ...papers.flatMap((p) => p.rows), { ...innerB, kind: 'inner-back' }, { ...back, kind: 'cover' }].map((r, i) => ({ ...r, sort: i }))
     rows.push({ id: SETTINGS_ID, sort: -1, kind: 'settings', title: '', body: '', image_url: bg })
     const { data: old } = await supabase.from('yearbook_pages').select('id')
     const gone = (old || []).map((o) => o.id).filter((id) => !rows.some((r) => r.id === id))
@@ -102,6 +107,7 @@ export default function Admin() {
       </Card>
 
       <CoverEditor label="Cover depan" c={front} onChange={(p) => setFront({ ...front, ...p })} onFile={imgHandler} />
+      <CoverEditor label="Dalam cover depan (belakang kertas cover)" c={innerF} onChange={(p) => setInnerF({ ...innerF, ...p })} onFile={imgHandler} />
 
       <h2 className="heading mt-2 text-2xl">Kertas siswa</h2>
       <p className="-mt-2 text-sm text-mute">Satu kertas berisi 2 siswa (foto + kata-kata), atau satu gambar jadi dari Canva.</p>
@@ -134,6 +140,7 @@ export default function Admin() {
         <button className="btn btn-gray" onClick={addCanva}><span className="icon !text-lg">image</span>Tambah kertas Canva</button>
       </div>
 
+      <CoverEditor label="Dalam cover belakang" c={innerB} onChange={(p) => setInnerB({ ...innerB, ...p })} onFile={imgHandler} />
       <CoverEditor label="Cover belakang" c={back} onChange={(p) => setBack({ ...back, ...p })} onFile={imgHandler} />
     </div>
   )

@@ -20,7 +20,7 @@ export default function App() {
     : undefined
 
   return (
-    <div className="min-h-screen bg-card" style={bgStyle}>
+    <div className="min-h-screen overflow-x-clip bg-card" style={bgStyle}>
       <nav className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-hair bg-white px-5">
         <a href="#/" className="heading text-xl no-underline">Yearbook</a>
         {admin

@@ -14,7 +14,7 @@
   --color-focus: #435ee5;
 }
 
-html, body { margin: 0; background: #fff; color: var(--color-body); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+html, body { overflow-x: clip; margin: 0; background: #fff; color: var(--color-body); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .display { font-weight: 600; line-height: 1.1; letter-spacing: -1.2px; color: #000; }
 .heading { font-weight: 700; line-height: 1.2; letter-spacing: -1.2px; color: #000; }
 .icon { font-family: "Material Symbols Rounded"; font-size: 22px; line-height: 1; font-variation-settings: "FILL" 0, "wght" 500; user-select: none; }
@@ -29,6 +29,7 @@ html, body { margin: 0; background: #fff; color: var(--color-body); font-family:
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 /* Belakang kertas putih polos HANYA di layar portrait (HP vertikal) dan HANYA saat membalik ke kanan (maju).
-   Landscape memakai tampilan bawaan library. Lembar yang dibalik diberi z-index 105 (startZIndex 100 + 5). */
+   Berlaku untuk cover, kertas isi, dan cover belakang. Landscape memakai tampilan bawaan library.
+   Lembar yang sedang dibalik ditandai data-flipper oleh Yearbook.jsx. */
 .page { background: #fff; }
-[data-flip="on"][data-mode="portrait"][data-dir="next"] .stf__item:not(.--simple)[style*="z-index: 105"] > * { visibility: hidden; }
+[data-flip="on"][data-mode="portrait"][data-dir="next"] .stf__item[data-flipper] > * { visibility: hidden; }
